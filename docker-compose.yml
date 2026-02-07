@@ -1,0 +1,76 @@
+version: "3.9"
+
+services:
+  backend:
+    build: ./backend
+    container_name: media-service-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - postgres
+      - redis
+
+    develop:
+      watch:
+        - action: sync
+          path: ./backend/app
+          target: /app/app
+
+        - action: rebuild
+          path: ./backend/pyproject.toml
+
+        - action: rebuild
+          path: ./backend/uv.lock
+
+        - action: rebuild
+          path: ./backend/prisma/schema.prisma
+
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: media-service-frontend-dev
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend/src
+          target: /app/src
+
+        - action: rebuild
+          path: ./frontend/package.json
+
+    profiles: ["dev"]
+
+  frontend-prod:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    container_name: media-service-frontend-prod
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+    profiles: ["prod"]
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: media
+      POSTGRES_PASSWORD: media
+      POSTGRES_DB: media
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+
+volumes:
+  pgdata:

@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+prisma
+python-dotenv
+jinja2
+boto3
+aiofiles
+redis
