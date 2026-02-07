@@ -88,3 +88,5 @@ services:
 
 volumes:
   pgdata:
+  minio_data:
+    driver: local
